@@ -1,0 +1,353 @@
+//
+#include "play.h"
+#include "gui.h"
+//#define CONSOLE
+
+PIMAGE play_png;
+PIMAGE stop_png;
+
+
+struct Music_List
+{
+	int list;
+	struct Music_List *next;
+};
+
+FILE *fp;
+
+int Music_N ;
+
+int init_data(char *data);
+int Is_Music(char *file_name);
+struct Music *Create( char *path );//create a music chain in certain path
+int Print_MusicInConsole( struct Music *head );//output the chain music
+struct Music *Find_Music(struct Music *head,int lable);//find the music by label
+int background(void);
+
+int gui_init();
+int Random_Play( struct Music *head );
+int Order_Play ( struct Music *head );
+int Input_Play ( struct Music *head ,int i);
+int Is_Music( char *file_name );
+
+int main()
+{
+    struct Music *head;
+    strcpy(Path,Way);
+    strcat(Path,Type);
+
+    head=Create(Path);
+    cout<<"create successful"<<endl;
+    //Print_MusicInConsole(head);
+    background();
+    //Input_Play(head,nu);
+    Print_MusicInConsole(head);
+    Random_Play(head);
+    //Order_Play(head);
+    //Random_Play(head);
+    MessageBox(NULL,"the end!!","",MB_OK);
+    return 0;
+}
+int gui_init()
+{
+	setinitmode(0,0,0);
+	initgraph(300,200);
+	setbkcolor(GREEN);
+	play_png=newimage();
+	getimage(play_png,"play.png",0,0);
+	putimage(150-17,150,play_png);
+	stop_png=newimage();
+	getimage(stop_png,"stop.png",0,0);
+	putimage(150-17,100,stop_png);
+	setfillcolor(WHITE);
+	bar(5,5,295,95);
+
+	return 0;
+}
+int Is_Music( char *file_name )
+{
+	int len;
+	len=strlen(file_name);
+	char *ch=&file_name[len-4];
+	if (strcmp(".mp3",ch)==0  )
+	{
+		//cout<<"is mp3"<<endl;
+		return 0;
+
+	}
+	if (strcmp(".wav",ch)==0  )
+	{
+		//cout<<"is wav"<<endl;
+		return 0;
+	}
+	//cout<<"Unknown file type "<<endl;
+	return -1;
+}
+
+struct Music *Create( char *path )
+{
+	struct Music *head;                                       //head point
+	struct Music *ptr1; 									  //new point
+	struct Music *ptr2;                                       //end point
+	int n=0;                                                  //point number
+    _finddata_t file_info;                					  //define file info
+    float handle;
+    char *music;											  //a room for music
+    ptr1=(struct Music*)malloc( sizeof( struct Music ) );	  //create a new element
+	ptr2=ptr1;  											  //
+	head=NULL;
+	while (ptr1->Music_name!='\0')
+	{
+		n+=1;
+		if ( n == 1 )
+		{
+			head=ptr1;
+
+			handle=_findfirst(path,&file_info);
+			music=(char*)malloc(sizeof(file_info.name));
+			sprintf(music,"%s",file_info.name);
+			ptr1->Music_name=(char*)malloc( sizeof(music) );
+			ptr1->Music_path=path;
+			ptr1->Music_name=music;
+			ptr1->Music_lable=n;
+			n++;
+#ifdef CONSOLE
+			cout<<n<<file_info.<<endl;
+#endif
+		}
+		else
+		{
+			ptr2->next=ptr1;
+
+		}
+		ptr2=ptr1;
+		ptr1=(struct Music*)malloc( sizeof( struct Music ) );
+		//enter the code hare
+
+		if ( _findnext(handle,&file_info)==0 )
+		{
+			music=(char*)malloc(sizeof(file_info.name)+8);
+			sprintf(music,"%s",file_info.name);
+			if( Is_Music(music)==0 )
+			{
+				ptr1->Music_name=(char*)malloc( sizeof(music) );
+				ptr1->Music_name=music;
+				cout<<music<<endl;
+				ptr1->Music_lable=n;
+			}
+#ifdef CONSOLE
+			cout<<n<<file_info.name<<endl;
+#endif
+		}
+		else
+		{
+			ptr1->Music_name='\0';
+		}
+		//cin>>ptr1->Music_name;
+
+		//end!!!
+	}
+	ptr2->next=NULL;
+	Music_N=n-1;
+	cout<<n<<endl;
+
+	return head;
+}
+
+int Print_MusicInConsole( struct Music *head )
+{
+	struct Music *ptr1;   //new point
+	ptr1=head;            //point to head
+	char *music;
+
+	cout<<ptr1->Music_name<<endl;
+	cout<<ptr1->Music_lable<<endl;
+	while( ptr1->next!=NULL )
+	{
+			ptr1=ptr1->next;
+			music=(char*)malloc( sizeof(ptr1->Music_path)+sizeof(ptr1->Music_name) );
+			sprintf(music,"<media src=\"%s\%s\"/>",Way,ptr1->Music_name);
+			init_data(music);
+			cout<<ptr1->Music_lable<<": "<<ptr1->Music_name<<endl;
+			delay(500);
+
+	}
+	return 0;
+}
+struct Music *Find_Music(struct Music *head,int lable)
+{
+	struct Music *song=NULL;
+	song=head;
+	while( song->next!=NULL )
+	{
+		if ( song->Music_lable == lable )
+		{
+			break;
+		}
+		else
+		{
+			song=song->next;
+		}
+	}
+	return song;
+}
+
+
+int Random_Play( struct Music *head )
+{
+    randomize();
+    int Play_Mnumber=0;
+    while ( 1 )
+    {
+    	cout<<"Random Play"<<endl;
+    	Play_Mnumber=random(Music_N+1);
+        Input_Play(head,Play_Mnumber );
+    }
+	return 0;
+}
+int Order_Play ( struct Music *head )
+{
+	struct Music *song;
+	struct Music_List *list_head;
+	struct Music_List *ptr1;
+	struct Music_List *ptr2;
+
+	int n=1;
+	char chcode[8];
+	char ch[8];
+	int code;
+	//cout<<"Key World :"<<endl;
+	//cin>>ch;
+	//cout<<"Key Number :"<<endl;
+	//cin>>code;
+	//system("cls");
+	background();
+	cout<<ch<<code<<" "<<"Search List :"<<endl;
+	sprintf(chcode,"%d",code);
+	ptr1=(struct Music_List*)malloc( sizeof(struct Music_List ) );
+
+	list_head=NULL;
+	int len;
+	ptr2=ptr1;
+	while( Music_N != 0 )
+	{
+		song=head;
+		while( song->next!=NULL )   //×Ö·û´®Æ¥Åä
+		{
+			len=strlen(song->Music_name);
+			if ( strstr( song->Music_name,ch )!=NULL && strstr( &song->Music_name[len-8],chcode )!=NULL && Is_Music(song->Music_name)==0 )
+			{
+				code+=1;
+				sprintf(chcode,"%d",code);
+				if ( n==1 )
+				{
+					list_head=ptr1;
+				}
+				else
+				{
+					ptr2->next=ptr1;
+				}
+				n++;
+				ptr2=ptr1;
+				ptr1->list=song->Music_lable;
+				cout<<"->> "<<n<<" <"<<ptr1->list<<" >"<<": "<<song->Music_name<<endl;
+
+				ptr1=(struct Music_List*)malloc( sizeof(struct Music_List ) );
+				break;
+			}
+			song=song->next;
+		}
+		Music_N--;
+	}
+	ptr2->next=NULL;
+//==============================================================================
+	ptr1=list_head;    //play in order
+	background();
+	cout<<"Order play"<<endl;
+	while( ptr1->next!=NULL )
+	{
+		Input_Play(head,ptr1->list);
+		cout<<ptr1->list<<endl;
+		ptr1=ptr1->next;
+	}
+	return 0;
+}
+int Input_Play ( struct Music *head ,int i)
+{
+	gui_init();
+	string a="Welcome come to Music!";
+	setbkcolor(GREEN);
+	setfont(20,0,"ËÎÌå");
+	setcolor(BLACK);
+	setbkmode(TRANSPARENT);
+	outtextxy(10,40,a.c_str());
+	struct Music *song;
+	char *music;
+	char music_Path[80];
+	char chinese[4];
+	MUSIC mus;
+	song=Find_Music(head,i);
+	music=(char*)malloc( sizeof(song->Music_path)+sizeof(song->Music_name) );
+	sprintf(music,"%s\\%s",Way,song->Music_name);
+	sprintf(music_Path,"%s",song->Music_name);
+	cout<<"On Play :>> "<<song->Music_lable<<"."<<song->Music_name<<endl;
+
+	//cout<<"look here:"<<music_Path<<endl;
+  /*******************************************************************/
+	//outtextxy(10,80,a.c_str());
+  /*******************************************************************/
+	init_data(music);//print play data into a file nameed data.log
+	mus.OpenFile(music);
+
+	mus.Play(0);
+	int n=0;
+
+	while( mus.GetPlayStatus()==MUSIC_MODE_PLAY )
+	{
+		api_sleep(80);
+
+		//if (getchar()==' ')
+		{
+			//setbuf(stdin,NULL);
+			//cout<<n++<<" keyboard input"<<endl;
+			//if( getch()==' ' )
+			//break;
+		 }
+	}
+	mus.Close();
+	return 0;
+}
+
+int background(void)
+{
+	printf("|-----------------------------------------------------------------------------|\n");
+	printf("|                                                                             |\n");
+	printf("|    *********************************************************************    |\n");
+	printf("|    *                                                                   *    |\n");
+	printf("|    *   Local Time: 2015-08-18 11:14:06                                 *    |\n");
+	printf("|    *    Host Name: Lenovo-PC                                           *    |\n");
+	printf("|    *        Uname: MS Windows NT                                       *    |\n");
+	printf("|    *      OS Info: 6.2                                                 *    |\n");
+	printf("|    *         User: admin                                               *    |\n");
+	printf("|    *  Customer ID: 63BB278D-D18CDE12                                   *    |\n");
+	printf("|    *  Current dir: C:\\Users\\admin                                      *    |\n");
+	printf("|    *                                                                   *    |\n");
+	printf("|    *********************************************************************    |\n");
+	printf("|                                                                             |\n");
+	printf("-------------------------------------------------------------------------------\n");
+	return 0;
+}
+int init_data(char *data)
+{
+	//system ("echo %time%>>data.log");
+	fp=fopen("data.log","a");
+	if (fp==NULL)
+	{
+		fp=fopen("data.log","w");
+		if ( fp==NULL )
+		cout<<"error"<<endl;
+	}
+	fprintf(fp,"%s\n",data);
+	fclose (fp);
+	return 0;
+}
